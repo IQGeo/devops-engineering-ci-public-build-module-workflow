@@ -1,0 +1,221 @@
+name: Reusable Build Workflow Template
+description: Template for building workflow manager components with common configurations
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to build'
+        required: true
+        type: string
+      build_type:
+        description: 'Type of build (final, pre-release, development)'
+        required: false
+        type: string
+        default: 'development'
+      modules:
+        description: 'Comma-separated list of modules to build'
+        required: false
+        type: string
+        default: 'workflow_manager,workflow_manager_dev_db,wfm_nmt'
+      include_editions:
+        description: 'Whether to build editions images'
+        required: false
+        type: boolean
+        default: true
+        
+    outputs:
+      build_id:
+        description: 'Unique identifier for this build'
+        value: ${{ jobs.setup.outputs.build_id }}
+      version:
+        description: 'Processed version string'
+        value: ${{ jobs.setup.outputs.version }}
+        
+    secrets:
+      GH_TOKEN:
+        required: true   
+      AZURE_STORAGE_ACCOUNT_KEY:
+        required: true
+      AZURE_CREDENTIALS:
+        required: true
+      REGISTRY_USERNAME:
+        required: true
+      REGISTRY_PASSWORD:
+        required: true
+
+env:
+  # Registry Configuration
+  ACR_REGISTRY: "iqgeoproddev.azurecr.io"
+  HARBOR_REGISTRY: "harbor.delivery.iqgeo.cloud"
+  
+  # External Workflow References
+  MULTI_ARCH_WORKFLOW: "IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main"
+  EDITIONS_WORKFLOW: "IQGeo/devops-engineering-ci-public-editions-workflow/.github/workflows/build-editions.yml@main"
+  
+  # Dockerfile Paths  
+  INJECTOR_DOCKERFILE: "Dockerfile.injector"
+  BUILD_DOCKERFILE: "deployment/dockerfile.build"
+  APPSERVER_DOCKERFILE: "deployment/dockerfile.appserver"
+  TOOLS_DOCKERFILE: "deployment/dockerfile.tools"
+  QA_DOCKERFILE: "deployment/dockerfile.QAappserver"
+  
+  # Build Contexts
+  ROOT_CONTEXT: "."
+  DEPLOYMENT_CONTEXT: "./deployment"
+
+run-name: Build ${{ inputs.version }}:${{ inputs.build_type }}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      build_id: ${{ steps.build_number.outputs.build_id }}
+      version: ${{ inputs.version }}
+      updated_tags: ${{ steps.tags.outputs.tags }}
+      modules_array: ${{ steps.modules.outputs.array }}
+    steps:
+      - name: Generate Build Number
+        id: build_number
+        run: |
+          RUN_NUMBER=$(echo ${{ github.run_number }} | rev | cut -c1-2 | rev)
+          RUN_DATE=$(date +%Y%m%d)
+          echo "build_id=$RUN_DATE_$RUN_NUMBER" >> $GITHUB_OUTPUT
+          echo "Generated build_id: $RUN_DATE_$RUN_NUMBER"
+      
+      # will need to update the module name and eng/release prefix after testing
+      - name: Install skopeo and Jquery to define version of latest tag of module injector in Azure container registry
+        id: final
+        if: inputs.build_type == 'final'
+        run: |
+          sudo apt-get update && sudo apt-get install -y skopeo jq
+          LATEST_IMAGE=$ACR_REGISTRY/workflow_manager
+          LATEST_TAGS=$(skopeo list-tags --creds ${{ secrets.REGISTRY_USERNAME }}:${{ secrets.REGISTRY_PASSWORD }} docker://$LATEST_IMAGE | jq -r '.Tags[]')
+          SEMVER_TAGS=$(echo "$LATEST_TAGS" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$')
+          LATEST_TAG=$(echo "$SEMVER_TAGS" | sort -V | tail -n1)
+          echo "Latest semantic version tag is: $LATEST_TAG"
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_ENV
+
+      # will need to update the module name and eng/release prefix after testing
+      - name: Install skopeo and Jquery to define version of latest pre-release tag of module injector in Azure container registry
+        id: pre-release
+        if: inputs.build_type == 'pre-release'
+        run: |
+          sudo apt-get update && sudo apt-get install -y skopeo jq
+          LATEST_PRE_RELEASE_IMAGE=$ACR_REGISTRY/workflow_manager
+          LATEST_PRE_RELEASE_TAGS=$(skopeo list-tags --creds ${{ secrets.REGISTRY_USERNAME }}:${{ secrets.REGISTRY_PASSWORD }} docker://$LATEST_PRE_RELEASE_IMAGE | jq -r '.Tags[]')
+          MINOR_PRE_RELEASE_TAGS=$(echo "$LATEST_PRE_RELEASE_TAGS" | grep -E '^[0-9]+\.[0-9]+$')
+          LATEST_PRE_RELEASE_TAG=$(echo "$MINOR_PRE_RELEASE_TAGS" | sort -V | tail -n1)
+          echo "Latest pre-release minor version tag is: $LATEST_PRE_RELEASE_TAG"
+          echo "latest_pre_release_tag=$LATEST_PRE_RELEASE_TAG" >> $GITHUB_ENV
+
+      - name: Generate build tags
+        id: tags
+        run: |
+          echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          case "${{ inputs.build_type }}" in
+            "final")
+              GREATER_VERSION=$(printf "%s\n%s" "${{ inputs.version }}" "$latest_tag" | sort -V | tail -n1)
+              if [[ "$GREATER_VERSION" == "${{ inputs.version }}" ]]; then
+                echo "New version (${{ inputs.version }}) is higher number; setting tag as latest"
+                TAGS="latest,${{ steps.build_number.outputs.build_id }}"
+              else
+                echo "Current latest tag ($latest_tag) is still highest number and will remain latest"
+              fi
+              ;;
+            "pre-release")
+              GREATER_PRE_RELEASE_VERSION=$(printf "%s\n%s" "${{ inputs.version }}" "$latest_pre_release_tag" | sort -V | tail -n1)
+              if [[ "$GREATER_PRE_RELEASE_VERSION" == "${{ inputs.version }}" ]]; then
+                echo "New version (${{ inputs.version }}) is higher number; setting tag as pre-release"
+                TAGS="pre-release,${{ steps.build_number.outputs.build_id }}"
+              else
+                echo "Current latest pre-release tag ($latest_pre_release_tag) is still highest number and will remain pre-release"
+              fi
+              ;;
+            *)
+              TAGS="development,${{ steps.build_number.outputs.build_id }}"
+              ;;
+          esac
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+          echo "Generated tags: $TAGS"
+          
+      - name: Process modules
+        id: modules
+        run: |
+          # Convert comma-separated string to JSON array
+          MODULES_JSON=$(echo "${{ inputs.modules }}" | jq -R 'split(",")' | tr -d '^\n')
+          echo "array=$MODULES_JSON" >> $GITHUB_OUTPUT
+          echo "Modules array: $MODULES_JSON"
+    
+  cut-artifacts:
+    needs: setup
+    uses: ./.github/workflows/cut-module.yml
+    with:
+      version: ${{ inputs.version }}
+    secrets: inherit
+    
+  build-injectors:
+    needs: [setup, cut-artifacts]
+    strategy:
+      matrix:
+        module: ${{ fromJson(needs.setup.outputs.modules_array) }}
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    with:
+      version: ${{ inputs.version }}
+      dockerfile_path: "Dockerfile.injector"
+      docker_context: "."
+      module: ${{ matrix.module }}
+      acr: "iqgeoproddev.azurecr.io"
+      harbor: "harbor.delivery.iqgeo.cloud"
+      updated_tags: ${{ needs.setup.outputs.updated_tags }}
+      build_id: ${{ needs.setup.outputs.build_id }}
+    secrets: inherit
+    
+  build-platform-build:
+    needs: [setup, build-injectors]
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    with:
+      version: ${{ inputs.version }}
+      module: platform-workflow-manager-build
+      dockerfile_path: "deployment/dockerfile.build"
+      docker_context: "."
+      acr: "iqgeoproddev.azurecr.io"
+      harbor: "harbor.delivery.iqgeo.cloud"
+      updated_tags: ${{ needs.setup.outputs.updated_tags }}
+      build_id: ${{ needs.setup.outputs.build_id }}
+    secrets: inherit
+    
+  build-platform-components:
+    needs: [setup, build-platform-build]
+    strategy:
+      matrix:
+        include:
+          - module: platform-workflow-manager-appserver
+            dockerfile_path: deployment/dockerfile.appserver
+          - module: platform-workflow-manager-tools  
+            dockerfile_path: deployment/dockerfile.tools
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    with:
+      version: ${{ inputs.version }}
+      module: ${{ matrix.module }}
+      dockerfile_path: ${{ matrix.dockerfile_path }}
+      docker_context: "./deployment"
+      acr: "iqgeoproddev.azurecr.io"
+      harbor: "harbor.delivery.iqgeo.cloud"
+      updated_tags: ${{ needs.setup.outputs.updated_tags }}
+      build_id: ${{ needs.setup.outputs.build_id }}
+    secrets: inherit
+    
+  build-qa-appserver:
+    needs: [setup, build-platform-components]
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    with:
+      version: ${{ inputs.version }}
+      module: platform-workflow-manager-qa-appserver
+      dockerfile_path: "deployment/dockerfile.QAappserver"
+      docker_context: "."
+      acr: "iqgeoproddev.azurecr.io"
+      harbor: "harbor.delivery.iqgeo.cloud"
+      updated_tags: ${{ needs.setup.outputs.updated_tags }}
+      build_id: ${{ needs.setup.outputs.build_id }}
+    secrets: inherit
