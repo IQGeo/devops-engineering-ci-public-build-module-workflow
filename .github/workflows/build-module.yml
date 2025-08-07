@@ -8,11 +8,6 @@ on:
         description: 'Version to build'
         required: true
         type: string
-      build_type:
-        description: 'Type of build (final, pre-release, development)'
-        required: false
-        type: string
-        default: 'development'
       modules:
         description: 'Comma-separated list of modules to build'
         required: false
@@ -23,14 +18,22 @@ on:
         required: false
         type: boolean
         default: true
-        
-    outputs:
+      shortened_version:
+        description: 'Shortened version for language packs repo'
+        required: true
+        type: string
+      tags:
+        description: 'Comma-separated list of all tags to apply'
+        required: true
+        type: string
       build_id:
-        description: 'Unique identifier for this build'
-        value: ${{ jobs.setup.outputs.build_id }}
-      version:
-        description: 'Processed version string'
-        value: ${{ jobs.setup.outputs.version }}
+        description: 'Unique build identifier'
+        required: true
+        type: string
+      is_release:
+        description: 'Whether this is a pre-release or release version'
+        required: true
+        type: string
         
     secrets:
       GH_TOKEN:
@@ -47,7 +50,6 @@ on:
 env:
   # Registry Configuration
   ACR_REGISTRY: "iqgeoproddev.azurecr.io"
-  HARBOR_REGISTRY: "harbor.delivery.iqgeo.cloud"
   
   # External Workflow References
   MULTI_ARCH_WORKFLOW: "IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main"
@@ -64,81 +66,14 @@ env:
   ROOT_CONTEXT: "."
   DEPLOYMENT_CONTEXT: "./deployment"
 
-run-name: Build ${{ inputs.version }}:${{ inputs.build_type }}
+run-name: Build ${{ inputs.version }}
 
 jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      build_id: ${{ steps.build_number.outputs.build_id }}
-      version: ${{ inputs.version }}
-      updated_tags: ${{ steps.tags.outputs.tags }}
       modules_array: ${{ steps.modules.outputs.array }}
-    steps:
-      - name: Generate Build Number
-        id: build_number
-        run: |
-          RUN_NUMBER=$(echo ${{ github.run_number }} | rev | cut -c1-2 | rev)
-          RUN_DATE=$(date +%Y%m%d)
-          echo "build_id=$RUN_DATE_$RUN_NUMBER" >> $GITHUB_OUTPUT
-          echo "Generated build_id: $RUN_DATE_$RUN_NUMBER"
-      
-      # will need to update the module name and eng/release prefix after testing
-      - name: Install skopeo and Jquery to define version of latest tag of module injector in Azure container registry
-        id: final
-        if: inputs.build_type == 'final'
-        run: |
-          sudo apt-get update && sudo apt-get install -y skopeo jq
-          LATEST_IMAGE=$ACR_REGISTRY/workflow_manager
-          LATEST_TAGS=$(skopeo list-tags --creds ${{ secrets.REGISTRY_USERNAME }}:${{ secrets.REGISTRY_PASSWORD }} docker://$LATEST_IMAGE | jq -r '.Tags[]')
-          SEMVER_TAGS=$(echo "$LATEST_TAGS" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$')
-          LATEST_TAG=$(echo "$SEMVER_TAGS" | sort -V | tail -n1)
-          echo "Latest semantic version tag is: $LATEST_TAG"
-          echo "latest_tag=$LATEST_TAG" >> $GITHUB_ENV
-
-      # will need to update the module name and eng/release prefix after testing
-      - name: Install skopeo and Jquery to define version of latest pre-release tag of module injector in Azure container registry
-        id: pre-release
-        if: inputs.build_type == 'pre-release'
-        run: |
-          sudo apt-get update && sudo apt-get install -y skopeo jq
-          LATEST_PRE_RELEASE_IMAGE=$ACR_REGISTRY/workflow_manager
-          LATEST_PRE_RELEASE_TAGS=$(skopeo list-tags --creds ${{ secrets.REGISTRY_USERNAME }}:${{ secrets.REGISTRY_PASSWORD }} docker://$LATEST_PRE_RELEASE_IMAGE | jq -r '.Tags[]')
-          MINOR_PRE_RELEASE_TAGS=$(echo "$LATEST_PRE_RELEASE_TAGS" | grep -E '^[0-9]+\.[0-9]+$')
-          LATEST_PRE_RELEASE_TAG=$(echo "$MINOR_PRE_RELEASE_TAGS" | sort -V | tail -n1)
-          echo "Latest pre-release minor version tag is: $LATEST_PRE_RELEASE_TAG"
-          echo "latest_pre_release_tag=$LATEST_PRE_RELEASE_TAG" >> $GITHUB_ENV
-
-      - name: Generate build tags
-        id: tags
-        run: |
-          echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
-          case "${{ inputs.build_type }}" in
-            "final")
-              GREATER_VERSION=$(printf "%s\n%s" "${{ inputs.version }}" "$latest_tag" | sort -V | tail -n1)
-              if [[ "$GREATER_VERSION" == "${{ inputs.version }}" ]]; then
-                echo "New version (${{ inputs.version }}) is higher number; setting tag as latest"
-                TAGS="latest,${{ steps.build_number.outputs.build_id }}"
-              else
-                echo "Current latest tag ($latest_tag) is still highest number and will remain latest"
-              fi
-              ;;
-            "pre-release")
-              GREATER_PRE_RELEASE_VERSION=$(printf "%s\n%s" "${{ inputs.version }}" "$latest_pre_release_tag" | sort -V | tail -n1)
-              if [[ "$GREATER_PRE_RELEASE_VERSION" == "${{ inputs.version }}" ]]; then
-                echo "New version (${{ inputs.version }}) is higher number; setting tag as pre-release"
-                TAGS="pre-release,${{ steps.build_number.outputs.build_id }}"
-              else
-                echo "Current latest pre-release tag ($latest_pre_release_tag) is still highest number and will remain pre-release"
-              fi
-              ;;
-            *)
-              TAGS="development,${{ steps.build_number.outputs.build_id }}"
-              ;;
-          esac
-          echo "tags=$TAGS" >> $GITHUB_OUTPUT
-          echo "Generated tags: $TAGS"
-          
+    steps:          
       - name: Process modules
         id: modules
         run: |
@@ -167,8 +102,10 @@ jobs:
       module: ${{ matrix.module }}
       acr: "iqgeoproddev.azurecr.io"
       harbor: "harbor.delivery.iqgeo.cloud"
-      updated_tags: ${{ needs.setup.outputs.updated_tags }}
-      build_id: ${{ needs.setup.outputs.build_id }}
+      updated_tags: ${{ inputs.tags }}
+      build_id: ${{ inputs.build_id }}
+      shortened_version: ${{ inputs.shortened_version }}
+      is_release: ${{ inputs.is_release }}
     secrets: inherit
     
   build-platform-build:
@@ -181,8 +118,9 @@ jobs:
       docker_context: "."
       acr: "iqgeoproddev.azurecr.io"
       harbor: "harbor.delivery.iqgeo.cloud"
-      updated_tags: ${{ needs.setup.outputs.updated_tags }}
-      build_id: ${{ needs.setup.outputs.build_id }}
+      updated_tags: ${{ inputs.tags }}
+      build_id: ${{ inputs.build_id }}
+      is_release: ${{ inputs.is_release }}
     secrets: inherit
     
   build-platform-components:
@@ -202,8 +140,9 @@ jobs:
       docker_context: "./deployment"
       acr: "iqgeoproddev.azurecr.io"
       harbor: "harbor.delivery.iqgeo.cloud"
-      updated_tags: ${{ needs.setup.outputs.updated_tags }}
-      build_id: ${{ needs.setup.outputs.build_id }}
+      updated_tags: ${{ inputs.tags }}
+      build_id: ${{ inputs.build_id }}
+      is_release: ${{ inputs.is_release }}
     secrets: inherit
     
   build-qa-appserver:
@@ -216,6 +155,7 @@ jobs:
       docker_context: "."
       acr: "iqgeoproddev.azurecr.io"
       harbor: "harbor.delivery.iqgeo.cloud"
-      updated_tags: ${{ needs.setup.outputs.updated_tags }}
-      build_id: ${{ needs.setup.outputs.build_id }}
+      updated_tags: ${{ inputs.tags }}
+      build_id: ${{ inputs.build_id }}
+      is_release: ${{ inputs.is_release }}
     secrets: inherit
