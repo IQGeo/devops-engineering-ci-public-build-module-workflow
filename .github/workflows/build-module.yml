@@ -38,9 +38,9 @@ on:
     secrets:
       GH_TOKEN:
         required: true   
-      AZURE_STORAGE_ACCOUNT_KEY:
+      HARBOR_USERNAME:
         required: true
-      AZURE_CREDENTIALS:
+      HARBOR_CLI_SECRET:
         required: true
       REGISTRY_USERNAME:
         required: true
