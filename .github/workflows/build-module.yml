@@ -1,5 +1,5 @@
 name: Reusable Build Workflow Template
-description: Template for building workflow manager components with common configurations
+description: Template for building module components with common configurations
 
 on:
   workflow_call:
@@ -113,7 +113,7 @@ jobs:
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
-      module: platform-workflow-manager-build
+      module: platform-gas-build
       dockerfile_path: "deployment/dockerfile.build"
       docker_context: "."
       acr: "iqgeoproddev.azurecr.io"
@@ -128,9 +128,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - module: platform-workflow-manager-appserver
+          - module: platform-gas-appserver
             dockerfile_path: deployment/dockerfile.appserver
-          - module: platform-workflow-manager-tools  
+          - module: platform-gas-tools  
             dockerfile_path: deployment/dockerfile.tools
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
@@ -150,7 +150,7 @@ jobs:
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
-      module: platform-workflow-manager-qa-appserver
+      module: platform-gas-qa-appserver
       dockerfile_path: "deployment/dockerfile.QAappserver"
       docker_context: "."
       acr: "iqgeoproddev.azurecr.io"
