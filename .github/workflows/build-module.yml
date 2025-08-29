@@ -87,6 +87,7 @@ jobs:
     uses: ./.github/workflows/cut-module.yml
     with:
       version: ${{ inputs.version }}
+      module: ${{ fromJson(needs.setup.outputs.modules_array)[0] }}
     secrets: inherit
     
   build-injectors:
@@ -113,7 +114,7 @@ jobs:
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
-      module: platform-gas-build
+      module: platform-${{ fromJson(needs.setup.outputs.modules_array)[0] }}-build
       dockerfile_path: "deployment/dockerfile.build"
       docker_context: "."
       acr: "iqgeoproddev.azurecr.io"

@@ -8,6 +8,10 @@ on:
         description: 'Version to build'
         required: true
         type: string
+      module:
+        description: 'Module to build'
+        required: true
+        type: string
     secrets:
         GH_TOKEN:
             required: true   
@@ -81,13 +85,14 @@ jobs:
             echo "Install pip requirements and run cut modules"
             sudo apt install -y libfreetype-dev
             pip install -r $CORE_REPO/WebApps/myworldapp/modules/dev_tools/requirements.txt --user
-            $CORE_REPO/WebApps/myworldapp/modules/gas_dev_db/utils/cut_gas_modules $VERSION
+            $CORE_REPO/WebApps/myworldapp/modules/$MODULE_dev_db/utils/cut_$MODULE_modules $VERSION
             cd temp
             pwd
             ls -la
         env:
           ###### This OUTPUT_DIR value is different on all modules cut scripts, it needs to be standardised
             OUTPUT_DIR: "${{ github.workspace }}/${{ env.OUTPUT_DIR }}"
+            MODULE: ${{ inputs.module }}
       
       - name: Azure Login
         uses: azure/login@v2
@@ -99,7 +104,7 @@ jobs:
         uses: azure/cli@v2
         with:
           inlineScript: |
-             az storage file upload-batch -d cut-binaries -s ${{ github.workspace }}/${{ env.OUTPUT_DIR }} --destination-path gas --account-name iqgeoplatformstorage --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
+             az storage file upload-batch -d cut-binaries -s ${{ github.workspace }}/${{ env.OUTPUT_DIR }} --destination-path ${{ inputs.module }} --account-name iqgeoplatformstorage --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
           azcliversion: latest
 
       - name: Archive binaries
