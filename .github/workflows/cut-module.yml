@@ -85,14 +85,13 @@ jobs:
             echo "Install pip requirements and run cut modules"
             sudo apt install -y libfreetype-dev
             pip install -r $CORE_REPO/WebApps/myworldapp/modules/dev_tools/requirements.txt --user
-            $CORE_REPO/WebApps/myworldapp/modules/$MODULE_dev_db/utils/cut_$MODULE_modules $VERSION
+            $CORE_REPO/WebApps/myworldapp/modules/${{ inputs.module}}_dev_db/utils/cut_${{ inputs.module}}_modules $VERSION
             cd temp
             pwd
             ls -la
         env:
           ###### This OUTPUT_DIR value is different on all modules cut scripts, it needs to be standardised
             OUTPUT_DIR: "${{ github.workspace }}/${{ env.OUTPUT_DIR }}"
-            MODULE: ${{ inputs.module }}
       
       - name: Azure Login
         uses: azure/login@v2
