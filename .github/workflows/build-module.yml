@@ -33,9 +33,11 @@ on:
       engineering_prefix:
         description: 'Engineering prefix to place multi arch images in ACR & Harbor'
         type: string
+        default: devops_sandbox_engineering
       releases_prefix:
         description: 'Releases prefix to place multi arch images in ACR & Harbor'
         type: string
+        default: devops_sandbox_releases
       is_release:
         description: 'Whether this is a pre-release or release version'
         required: true
