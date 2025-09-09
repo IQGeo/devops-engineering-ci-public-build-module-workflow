@@ -30,6 +30,12 @@ on:
         description: 'Unique build identifier'
         required: true
         type: string
+      engineering_prefix:
+        description: 'Engineering prefix to place multi arch images in ACR & Harbor'
+        type: string
+      releases_prefix:
+        description: 'Releases prefix to place multi arch images in ACR & Harbor'
+        type: string
       is_release:
         description: 'Whether this is a pre-release or release version'
         required: true
@@ -106,6 +112,8 @@ jobs:
       build_id: ${{ inputs.build_id }}
       shortened_version: ${{ inputs.shortened_version }}
       is_release: ${{ inputs.is_release }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}
+      releases_prefix: ${{ inputs.releases_prefix }}
     secrets: inherit
     
   build-platform-build:
@@ -121,6 +129,8 @@ jobs:
       updated_tags: ${{ inputs.tags }}
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}
+      releases_prefix: ${{ inputs.releases_prefix }}
     secrets: inherit
     
   build-platform-components:
@@ -143,6 +153,8 @@ jobs:
       updated_tags: ${{ inputs.tags }}
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}
+      releases_prefix: ${{ inputs.releases_prefix }}
     secrets: inherit
     
   build-qa-appserver:
@@ -158,4 +170,6 @@ jobs:
       updated_tags: ${{ inputs.tags }}
       build_id: ${{ inputs.build_id }}
       is_release: ${{ inputs.is_release }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}
+      releases_prefix: ${{ inputs.releases_prefix }}
     secrets: inherit
