@@ -46,6 +46,7 @@ on:
         description: 'Whether to build QA images (platform with module)'
         required: true
         type: boolean
+        default: true
       namespace:
         description: 'Kubernetes namespace for the deployment'
         type: string
