@@ -91,34 +91,34 @@ jobs:
           echo "Modules array: $MODULES_JSON"
     
   # The module is the first item in the modules array defined in the setup step above 
-  # cut-artifacts:
-  #   needs: setup
-  #   uses: ./.github/workflows/cut-module.yml
-  #   with:
-  #     version: ${{ inputs.version }}
-  #     module: ${{ fromJson(needs.setup.outputs.modules_array)[0] }}
-  #   secrets: inherit
+  cut-artifacts:
+    needs: setup
+    uses: ./.github/workflows/cut-module.yml
+    with:
+      version: ${{ inputs.version }}
+      module: ${{ fromJson(needs.setup.outputs.modules_array)[0] }}
+    secrets: inherit
     
-  # build-injectors:
-  #   needs: [setup, cut-artifacts]
-  #   strategy:
-  #     matrix:
-  #       module: ${{ fromJson(needs.setup.outputs.modules_array) }}
-  #   uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
-  #   with:
-  #     version: ${{ inputs.version }}
-  #     dockerfile_path: "Dockerfile.injector"
-  #     docker_context: "."
-  #     module: ${{ matrix.module }}
-  #     acr: "iqgeoproddev.azurecr.io"
-  #     harbor: "harbor.delivery.iqgeo.cloud"
-  #     updated_tags: ${{ inputs.tags }}
-  #     build_id: ${{ inputs.build_id }}
-  #     shortened_version: ${{ inputs.shortened_version }}
-  #     is_release: ${{ inputs.is_release }}
-  #     engineering_prefix: ${{ inputs.engineering_prefix }}/${{ fromJson(needs.setup.outputs.modules_array)[0] }}
-  #     releases_prefix: ${{ inputs.releases_prefix }}
-  #   secrets: inherit
+  build-injectors:
+    needs: [setup, cut-artifacts]
+    strategy:
+      matrix:
+        module: ${{ fromJson(needs.setup.outputs.modules_array) }}
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    with:
+      version: ${{ inputs.version }}
+      dockerfile_path: "Dockerfile.injector"
+      docker_context: "."
+      module: ${{ matrix.module }}
+      acr: "iqgeoproddev.azurecr.io"
+      harbor: "harbor.delivery.iqgeo.cloud"
+      updated_tags: ${{ inputs.tags }}
+      build_id: ${{ inputs.build_id }}
+      shortened_version: ${{ inputs.shortened_version }}
+      is_release: ${{ inputs.is_release }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}/${{ fromJson(needs.setup.outputs.modules_array)[0] }}
+      releases_prefix: ${{ inputs.releases_prefix }}
+    secrets: inherit
 
   hyphenate-modules:
     needs: setup
@@ -135,60 +135,60 @@ jobs:
           echo "hyphenated_module=$HYPHENATED_MODULE" >> $GITHUB_OUTPUT
           echo "Hyphenated module name: $HYPHENATED_MODULE"
 
-  # build-platform-build:
-  #   needs: [setup, hyphenate-modules, build-injectors]
-  #   uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
-  #   with:
-  #     version: ${{ inputs.version }}
-  #     module: platform-${{ needs.hyphenate-modules.outputs.hyphenated_module }}-build
-  #     dockerfile_path: "deployment/dockerfile.build"
-  #     docker_context: "."
-  #     acr: "iqgeoproddev.azurecr.io"
-  #     harbor: "harbor.delivery.iqgeo.cloud"
-  #     updated_tags: ${{ inputs.tags }}
-  #     build_id: ${{ inputs.build_id }}
-  #     is_release: ${{ inputs.is_release }}
-  #     engineering_prefix: ${{ inputs.engineering_prefix }}
-  #     releases_prefix: ${{ inputs.releases_prefix }}
-  #   secrets: inherit
+  build-platform-build:
+    needs: [setup, hyphenate-modules, build-injectors]
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    with:
+      version: ${{ inputs.version }}
+      module: platform-${{ needs.hyphenate-modules.outputs.hyphenated_module }}-build
+      dockerfile_path: "deployment/dockerfile.build"
+      docker_context: "."
+      acr: "iqgeoproddev.azurecr.io"
+      harbor: "harbor.delivery.iqgeo.cloud"
+      updated_tags: ${{ inputs.tags }}
+      build_id: ${{ inputs.build_id }}
+      is_release: ${{ inputs.is_release }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}
+      releases_prefix: ${{ inputs.releases_prefix }}
+    secrets: inherit
     
-  # build-platform-components:
-  #   needs: [setup, hyphenate-modules, build-platform-build]
-  #   strategy:
-  #     matrix:
-  #       include:
-  #         - module: platform-${{ needs.hyphenate-modules.outputs.hyphenated_module }}-appserver
-  #           dockerfile_path: deployment/dockerfile.appserver
-  #         - module: platform-${{ needs.hyphenate-modules.outputs.hyphenated_module }}-tools  
-  #           dockerfile_path: deployment/dockerfile.tools
-  #   uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
-  #   with:
-  #     version: ${{ inputs.version }}
-  #     module: ${{ matrix.module }}
-  #     dockerfile_path: ${{ matrix.dockerfile_path }}
-  #     docker_context: "./deployment"
-  #     acr: "iqgeoproddev.azurecr.io"
-  #     harbor: "harbor.delivery.iqgeo.cloud"
-  #     updated_tags: ${{ inputs.tags }}
-  #     build_id: ${{ inputs.build_id }}
-  #     is_release: ${{ inputs.is_release }}
-  #     engineering_prefix: ${{ inputs.engineering_prefix }}
-  #     releases_prefix: ${{ inputs.releases_prefix }}
-  #   secrets: inherit
+  build-platform-components:
+    needs: [setup, hyphenate-modules, build-platform-build]
+    strategy:
+      matrix:
+        include:
+          - module: platform-${{ needs.hyphenate-modules.outputs.hyphenated_module }}-appserver
+            dockerfile_path: deployment/dockerfile.appserver
+          - module: platform-${{ needs.hyphenate-modules.outputs.hyphenated_module }}-tools  
+            dockerfile_path: deployment/dockerfile.tools
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    with:
+      version: ${{ inputs.version }}
+      module: ${{ matrix.module }}
+      dockerfile_path: ${{ matrix.dockerfile_path }}
+      docker_context: "./deployment"
+      acr: "iqgeoproddev.azurecr.io"
+      harbor: "harbor.delivery.iqgeo.cloud"
+      updated_tags: ${{ inputs.tags }}
+      build_id: ${{ inputs.build_id }}
+      is_release: ${{ inputs.is_release }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}
+      releases_prefix: ${{ inputs.releases_prefix }}
+    secrets: inherit
     
-  # build-qa-appserver:
-  #   needs: [setup, hyphenate-modules, build-platform-components]
-  #   uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
-  #   with:
-  #     version: ${{ inputs.version }}
-  #     module: platform-${{ needs.hyphenate-modules.outputs.hyphenated_module }}-qa-appserver
-  #     dockerfile_path: "deployment/dockerfile.QAappserver"
-  #     docker_context: "."
-  #     acr: "iqgeoproddev.azurecr.io"
-  #     harbor: "harbor.delivery.iqgeo.cloud"
-  #     updated_tags: ${{ inputs.tags }}
-  #     build_id: ${{ inputs.build_id }}
-  #     is_release: ${{ inputs.is_release }}
-  #     engineering_prefix: ${{ inputs.engineering_prefix }}
-  #     releases_prefix: ${{ inputs.releases_prefix }}
-  #   secrets: inherit
+  build-qa-appserver:
+    needs: [setup, hyphenate-modules, build-platform-components]
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    with:
+      version: ${{ inputs.version }}
+      module: platform-${{ needs.hyphenate-modules.outputs.hyphenated_module }}-qa-appserver
+      dockerfile_path: "deployment/dockerfile.QAappserver"
+      docker_context: "."
+      acr: "iqgeoproddev.azurecr.io"
+      harbor: "harbor.delivery.iqgeo.cloud"
+      updated_tags: ${{ inputs.tags }}
+      build_id: ${{ inputs.build_id }}
+      is_release: ${{ inputs.is_release }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}
+      releases_prefix: ${{ inputs.releases_prefix }}
+    secrets: inherit
