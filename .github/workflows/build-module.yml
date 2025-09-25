@@ -42,6 +42,10 @@ on:
         description: 'Whether this is a pre-release or release version'
         required: true
         type: string
+      qa_image_name:
+        description: 'Hyphenated module name for QA images (e.g., platform-workflow-manager-build)'
+        required: true
+        type: string
         
     secrets:
       GH_TOKEN:
@@ -120,27 +124,12 @@ jobs:
       releases_prefix: ${{ inputs.releases_prefix }}
     secrets: inherit
 
-  hyphenate-modules:
-    needs: setup
-    runs-on: ubuntu-latest
-    outputs:
-      hyphenated_module: ${{ steps.hyphenate.outputs.hyphenated_module }}
-    steps:          
-      - name: Hyphenate modules
-        id: hyphenate
-        run: |
-          # Convert module names with underscores to hyphens
-          UNDERSCORE_MODULE=${{ fromJson(needs.setup.outputs.modules_array)[0] }}
-          HYPHENATED_MODULE=${UNDERSCORE_MODULE//_/-}
-          echo "hyphenated_module=$HYPHENATED_MODULE" >> $GITHUB_OUTPUT
-          echo "Hyphenated module name: $HYPHENATED_MODULE"
-
   build-platform-build:
-    needs: [setup, hyphenate-modules, build-injectors]
+    needs: [setup, build-injectors]
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
-      module: platform-${{ needs.hyphenate-modules.outputs.hyphenated_module }}-build
+      module: platform-${{ inputs.qa_image_name }}-build
       dockerfile_path: "deployment/dockerfile.build"
       docker_context: "."
       acr: "iqgeoproddev.azurecr.io"
@@ -153,13 +142,13 @@ jobs:
     secrets: inherit
     
   build-platform-components:
-    needs: [setup, hyphenate-modules, build-platform-build]
+    needs: [setup, build-platform-build]
     strategy:
       matrix:
         include:
-          - module: platform-${{ needs.hyphenate-modules.outputs.hyphenated_module }}-appserver
+          - module: platform-${{ inputs.qa_image_name }}-appserver
             dockerfile_path: deployment/dockerfile.appserver
-          - module: platform-${{ needs.hyphenate-modules.outputs.hyphenated_module }}-tools  
+          - module: platform-${{ inputs.qa_image_name }}-tools  
             dockerfile_path: deployment/dockerfile.tools
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
@@ -177,11 +166,11 @@ jobs:
     secrets: inherit
     
   build-qa-appserver:
-    needs: [setup, hyphenate-modules, build-platform-components]
+    needs: [setup, build-platform-components]
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
-      module: platform-${{ needs.hyphenate-modules.outputs.hyphenated_module }}-qa-appserver
+      module: platform-${{ inputs.qa_image_name }}-qa-appserver
       dockerfile_path: "deployment/dockerfile.QAappserver"
       docker_context: "."
       acr: "iqgeoproddev.azurecr.io"
