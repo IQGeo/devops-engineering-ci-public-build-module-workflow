@@ -43,7 +43,7 @@ on:
         required: true
         type: string
       qa_image_name:
-        description: 'Hyphenated module name for QA images (e.g., platform-workflow-manager-build)'
+        description: 'Hyphenated module name for QA images (e.g., platform-workflow-manager-build instead of platform-workflow_manager-build)'
         required: true
         type: string
         
