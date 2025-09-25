@@ -44,7 +44,6 @@ on:
         type: string
       build_qa_images:
         description: 'Whether to build QA images (platform with module)'
-        required: true
         type: boolean
         default: true
       namespace:
