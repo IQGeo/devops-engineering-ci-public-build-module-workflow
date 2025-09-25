@@ -42,7 +42,7 @@ on:
         description: 'Whether this is a pre-release or release version'
         required: true
         type: string
-      qa_image_name:
+      qa_module_name:
         description: 'Hyphenated module name for QA images (e.g., platform-workflow-manager-build instead of platform-workflow_manager-build)'
         required: true
         type: string
@@ -129,7 +129,7 @@ jobs:
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
-      module: platform-${{ inputs.qa_image_name }}-build
+      module: platform-${{ inputs.qa_module_name }}-build
       dockerfile_path: "deployment/dockerfile.build"
       docker_context: "."
       acr: "iqgeoproddev.azurecr.io"
@@ -146,9 +146,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - module: platform-${{ inputs.qa_image_name }}-appserver
+          - module: platform-${{ inputs.qa_module_name }}-appserver
             dockerfile_path: deployment/dockerfile.appserver
-          - module: platform-${{ inputs.qa_image_name }}-tools  
+          - module: platform-${{ inputs.qa_module_name }}-tools  
             dockerfile_path: deployment/dockerfile.tools
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
@@ -170,7 +170,7 @@ jobs:
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
-      module: platform-${{ inputs.qa_image_name }}-qa-appserver
+      module: platform-${{ inputs.qa_module_name }}-qa-appserver
       dockerfile_path: "deployment/dockerfile.QAappserver"
       docker_context: "."
       acr: "iqgeoproddev.azurecr.io"
