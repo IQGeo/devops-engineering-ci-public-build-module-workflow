@@ -45,6 +45,12 @@ on:
       qa_module_name:
         description: 'Hyphenated module name for QA images (e.g., platform-workflow-manager-build instead of platform-workflow_manager-build)'
         required: true
+      build_qa_images:
+        description: 'Whether to build QA images (platform with module)'
+        type: boolean
+        default: true
+      namespace:
+        description: 'Kubernetes namespace for the deployment'
         type: string
         
     secrets:
@@ -125,6 +131,7 @@ jobs:
     secrets: inherit
 
   build-platform-build:
+    if: ${{ inputs.build_qa_images == true }}
     needs: [setup, build-injectors]
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
@@ -142,6 +149,7 @@ jobs:
     secrets: inherit
     
   build-platform-components:
+    if: ${{ inputs.build_qa_images == true }}
     needs: [setup, build-platform-build]
     strategy:
       matrix:
@@ -166,6 +174,7 @@ jobs:
     secrets: inherit
     
   build-qa-appserver:
+    if: ${{ inputs.build_qa_images == true }}
     needs: [setup, build-platform-components]
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
@@ -180,4 +189,13 @@ jobs:
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}
       releases_prefix: ${{ inputs.releases_prefix }}
+    secrets: inherit
+
+  redeploy-eks-pod:
+    if: ${{ inputs.namespace != '' && inputs.build_qa_images == true }}
+    needs: [setup, build-platform-components]
+    uses: IQGeo/devops-engineering-ci-redeploy-eks-pod/.github/workflows/redeploy-eks-pod.yml@main
+    with:
+      module: ${{ fromJson(needs.setup.outputs.modules_array)[0] }}
+      namespace: ${{ inputs.namespace }}
     secrets: inherit
