@@ -52,6 +52,7 @@ on:
       pod_name:
         description: 'Kubernetes pod name to redeploy after images are built'
         type: string
+        default: ''
         
     secrets:
       GH_TOKEN:
@@ -192,7 +193,7 @@ jobs:
     secrets: inherit
 
   redeploy-eks-pod:
-    if: ${{ inputs.namespace != '' && inputs.build_qa_images == true }}
+    if: ${{ inputs.namespace != '' && inputs.pod_name != '' && inputs.build_qa_images == true }}
     needs: [setup, build-platform-components]
     uses: IQGeo/devops-engineering-ci-redeploy-eks-pod/.github/workflows/redeploy-eks-pod.yml@main
     with:
