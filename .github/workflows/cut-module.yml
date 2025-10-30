@@ -85,7 +85,7 @@ jobs:
         if: ${{ inputs.module == 'comms_cloud' }}
         run: |
             echo "Move Comms content to modules."
-            mv $GITHUB_WORKSPACE/myworld-product-network-manager-comms/comms_dev_db $MODULES_DIR/comms_dev_db
+            mv $GITHUB_WORKSPACE/myworld-product-network-manager-comms/comms_dev_tools $MODULES_DIR/comms_dev_tools
             ls -la $MODULES_DIR            
       
       - name: Create temp directory
