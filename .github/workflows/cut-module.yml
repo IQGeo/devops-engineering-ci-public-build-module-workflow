@@ -12,6 +12,11 @@ on:
         description: 'Module to build'
         required: true
         type: string
+      cut_script:
+        description: 'Cut script location to run'
+        required: false
+        type: string
+        default: 'dev_db'
     secrets:
         GH_TOKEN:
             required: true   
@@ -85,7 +90,7 @@ jobs:
             echo "Install pip requirements and run cut modules"
             sudo apt install -y libfreetype-dev
             pip install -r $CORE_REPO/WebApps/myworldapp/modules/dev_tools/requirements.txt --user
-            $CORE_REPO/WebApps/myworldapp/modules/${{ inputs.module}}_dev_db/utils/cut_${{ inputs.module}}_modules $VERSION
+            $CORE_REPO/WebApps/myworldapp/modules/${{ inputs.module}}_${{ inputs.cut_script }}/utils/cut_${{ inputs.module}}_modules $VERSION
             cd temp
             pwd
             ls -la
