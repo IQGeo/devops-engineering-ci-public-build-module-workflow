@@ -40,6 +40,14 @@ jobs:
             path: myworld-product-core    
             token: ${{ secrets.GH_TOKEN }}
 
+      - name: Checkout Comms repo if building comms_cloud
+        if: ${{ inputs.module == 'comms_cloud' }}
+        uses: actions/checkout@v4
+        with:
+            repository: IQGeo/myworld-product-network-manager-comms
+            path: myworld-product-network-manager-comms
+            token: ${{ secrets.GH_TOKEN }}
+
       - name: Set Variables
         run: |
             echo "CORE_REPO=$GITHUB_WORKSPACE/myworld-product-core" >> $GITHUB_ENV
