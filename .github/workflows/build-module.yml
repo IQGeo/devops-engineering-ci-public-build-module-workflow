@@ -56,6 +56,12 @@ on:
       image_reference:
         description: 'Optional input in the engineering_prefix for modules that are pushed to a different repository'
         type: string
+        required: false
+      cut_script_directory:
+        description: 'Cut script location to run'
+        required: false
+        type: string
+        default: 'dev_db'
         
     secrets:
       GH_TOKEN:
@@ -121,6 +127,7 @@ jobs:
     with:
       version: ${{ inputs.version }}
       module: ${{ fromJson(needs.setup.outputs.modules_array)[0] }}
+      cut_script_directory: ${{ inputs.cut_script_directory }}
     secrets: inherit
     
   build-injectors:
