@@ -53,6 +53,10 @@ on:
         description: 'Kubernetes pod name to redeploy after images are built'
         type: string
         default: ''
+      image_reference:
+        description: 'Optional input in the engineering_prefix for modules that are pushed to a different repository'
+        type: string
+        required: false
       cut_script_directory:
         description: 'Cut script location to run'
         required: false
@@ -143,7 +147,7 @@ jobs:
       build_id: ${{ inputs.build_id }}
       shortened_version: ${{ inputs.shortened_version }}
       is_release: ${{ inputs.is_release }}
-      engineering_prefix: ${{ inputs.engineering_prefix }}/${{ fromJson(needs.setup.outputs.modules_array)[0] }}
+      engineering_prefix: ${{ inputs.engineering_prefix }}/${{ inputs.image_reference || fromJson(needs.setup.outputs.modules_array)[0] }}
       releases_prefix: ${{ inputs.releases_prefix }}
     secrets: inherit
 

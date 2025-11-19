@@ -45,6 +45,14 @@ jobs:
             path: myworld-product-core    
             token: ${{ secrets.GH_TOKEN }}
 
+      - name: Checkout Comms repo if building comms_cloud
+        if: ${{ inputs.module == 'comms_cloud' }}
+        uses: actions/checkout@v4
+        with:
+            repository: IQGeo/myworld-product-network-manager-comms
+            path: myworld-product-network-manager-comms
+            token: ${{ secrets.GH_TOKEN }}
+
       - name: Set Variables
         run: |
             echo "CORE_REPO=$GITHUB_WORKSPACE/myworld-product-core" >> $GITHUB_ENV
@@ -77,6 +85,13 @@ jobs:
             echo "Move "${{github.event.repository.name}}" content to modules.  We want this to remain a git repo"
             mv $GITHUB_WORKSPACE/${{github.event.repository.name}}/.* $MODULES_DIR
             ls -la $MODULES_DIR
+
+      - name: Move Comms content to modules if module is comms_cloud
+        if: ${{ inputs.module == 'comms_cloud' }}
+        run: |
+            echo "Move Comms content to modules."
+            mv $GITHUB_WORKSPACE/myworld-product-network-manager-comms/comms_dev_tools $MODULES_DIR/comms_dev_tools
+            ls -la $MODULES_DIR            
       
       - name: Create temp directory
         run: |
