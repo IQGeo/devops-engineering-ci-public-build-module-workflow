@@ -14,8 +14,9 @@ on:
         type: string
       release_modules:
         description: 'Comma-separated list of modules to include in release repostitories'
-        required: true
+        required: false
         type: string
+        default: ''
       include_editions:
         description: 'Whether to build editions images'
         required: false
