@@ -139,7 +139,7 @@ jobs:
     strategy:
       matrix:
         module: ${{ fromJson(needs.setup.outputs.modules_array) }}
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/ET-772-releases-fix
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
       dockerfile_path: "Dockerfile.injector"
@@ -159,7 +159,7 @@ jobs:
   build-platform-build:
     if: ${{ inputs.build_qa_images == true }}
     needs: [setup, build-injectors]
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/ET-772-releases-fix
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
       module: platform-${{ needs.setup.outputs.hyphenated_module }}-build
@@ -185,7 +185,7 @@ jobs:
             dockerfile_path: deployment/dockerfile.appserver
           - module: platform-${{ needs.setup.outputs.hyphenated_module }}-tools  
             dockerfile_path: deployment/dockerfile.tools
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/ET-772-releases-fix
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
       module: ${{ matrix.module }}
@@ -204,7 +204,7 @@ jobs:
   build-qa-appserver:
     if: ${{ inputs.build_qa_images == true }}
     needs: [setup, build-platform-components]
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/ET-772-releases-fix
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
       module: platform-${{ needs.setup.outputs.hyphenated_module }}-qa-appserver
@@ -220,11 +220,11 @@ jobs:
       releases_prefix: ${{ inputs.releases_prefix }}
     secrets: inherit
 
-  # redeploy-eks-pod:
-  #   if: ${{ inputs.namespace != '' && inputs.pod_name != '' && inputs.build_qa_images == true }}
-  #   needs: [setup, build-platform-components]
-  #   uses: IQGeo/devops-engineering-ci-redeploy-eks-pod/.github/workflows/redeploy-eks-pod.yml@main
-  #   with:
-  #     pod_name: ${{ inputs.pod_name }}
-  #     namespace: ${{ inputs.namespace }}
-  #   secrets: inherit
+  redeploy-eks-pod:
+    if: ${{ inputs.namespace != '' && inputs.pod_name != '' && inputs.build_qa_images == true }}
+    needs: [setup, build-platform-components]
+    uses: IQGeo/devops-engineering-ci-redeploy-eks-pod/.github/workflows/redeploy-eks-pod.yml@main
+    with:
+      pod_name: ${{ inputs.pod_name }}
+      namespace: ${{ inputs.namespace }}
+    secrets: inherit
