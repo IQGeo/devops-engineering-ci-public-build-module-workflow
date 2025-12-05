@@ -10,9 +10,13 @@ on:
         type: string
       modules:
         description: 'Comma-separated list of modules to build'
+        required: true
+        type: string
+      release_modules:
+        description: 'Comma-separated list of modules to include in release repostitories'
         required: false
         type: string
-        default: 'workflow_manager,workflow_manager_dev_db,wfm_nmt'
+        default: 'none'
       include_editions:
         description: 'Whether to build editions images'
         required: false
@@ -141,6 +145,7 @@ jobs:
       dockerfile_path: "Dockerfile.injector"
       docker_context: "."
       module: ${{ matrix.module }}
+      release_modules: ${{ inputs.release_modules }}
       acr: "iqgeoproddev.azurecr.io"
       harbor: "harbor.delivery.iqgeo.cloud"
       updated_tags: ${{ inputs.tags }}
@@ -158,6 +163,7 @@ jobs:
     with:
       version: ${{ inputs.version }}
       module: platform-${{ needs.setup.outputs.hyphenated_module }}-build
+      release_modules: ${{ inputs.release_modules }}
       dockerfile_path: "deployment/dockerfile.build"
       docker_context: "."
       acr: "iqgeoproddev.azurecr.io"
@@ -183,6 +189,7 @@ jobs:
     with:
       version: ${{ inputs.version }}
       module: ${{ matrix.module }}
+      release_modules: ${{ inputs.release_modules }}
       dockerfile_path: ${{ matrix.dockerfile_path }}
       docker_context: "./deployment"
       acr: "iqgeoproddev.azurecr.io"
@@ -201,6 +208,7 @@ jobs:
     with:
       version: ${{ inputs.version }}
       module: platform-${{ needs.setup.outputs.hyphenated_module }}-qa-appserver
+      release_modules: ${{ inputs.release_modules }}
       dockerfile_path: "deployment/dockerfile.QAappserver"
       docker_context: "."
       acr: "iqgeoproddev.azurecr.io"
