@@ -103,7 +103,7 @@ jobs:
       - name: Install pip requirements and run cut modules
         run: |
             echo "Install pip requirements and run cut modules"
-            sudo apt install -y libfreetype-dev
+            sudo apt-get update && sudo apt install -y libfreetype-dev
             pip install -r $CORE_REPO/WebApps/myworldapp/modules/dev_tools/requirements.txt --user
             $CORE_REPO/WebApps/myworldapp/modules/${{ inputs.module}}_${{ inputs.cut_script_directory }}/utils/cut_${{ inputs.module}}_modules $VERSION
             cd temp
