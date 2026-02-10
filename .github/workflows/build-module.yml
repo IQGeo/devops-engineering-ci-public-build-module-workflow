@@ -201,30 +201,45 @@ jobs:
       releases_prefix: ${{ inputs.releases_prefix }}
     secrets: inherit
     
-  build-qa-appserver:
-    if: ${{ inputs.build_qa_images == true }}
-    needs: [setup, build-platform-components]
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
-    with:
-      version: ${{ inputs.version }}
-      module: platform-${{ needs.setup.outputs.hyphenated_module }}-qa-appserver
-      release_modules: ${{ inputs.release_modules }}
-      dockerfile_path: "deployment/dockerfile.QAappserver"
-      docker_context: "."
-      acr: "iqgeoproddev.azurecr.io"
-      harbor: "harbor.delivery.iqgeo.cloud"
-      updated_tags: ${{ inputs.tags }}
-      build_id: ${{ inputs.build_id }}
-      is_release: ${{ inputs.is_release }}
-      engineering_prefix: ${{ inputs.engineering_prefix }}
-      releases_prefix: ${{ inputs.releases_prefix }}
-    secrets: inherit
+  # build-qa-appserver:
+  #   if: ${{ inputs.build_qa_images == true }}
+  #   needs: [setup, build-platform-components]
+  #   uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+  #   with:
+  #     version: ${{ inputs.version }}
+  #     module: platform-${{ needs.setup.outputs.hyphenated_module }}-qa-appserver
+  #     release_modules: ${{ inputs.release_modules }}
+  #     dockerfile_path: "deployment/dockerfile.QAappserver"
+  #     docker_context: "."
+  #     acr: "iqgeoproddev.azurecr.io"
+  #     harbor: "harbor.delivery.iqgeo.cloud"
+  #     updated_tags: ${{ inputs.tags }}
+  #     build_id: ${{ inputs.build_id }}
+  #     is_release: ${{ inputs.is_release }}
+  #     engineering_prefix: ${{ inputs.engineering_prefix }}
+  #     releases_prefix: ${{ inputs.releases_prefix }}
+  #   secrets: inherit
 
-  redeploy-eks-pod:
-    if: ${{ inputs.namespace != '' && inputs.pod_name != '' && inputs.build_qa_images == true }}
+  # redeploy-eks-pod:
+  #   if: ${{ inputs.namespace != '' && inputs.pod_name != '' && inputs.build_qa_images == true }}
+  #   needs: [setup, build-platform-components]
+  #   uses: IQGeo/devops-engineering-ci-redeploy-eks-pod/.github/workflows/redeploy-eks-pod.yml@main
+  #   with:
+  #     pod_name: ${{ inputs.pod_name }}
+  #     namespace: ${{ inputs.namespace }}
+  #   secrets: inherit
+
+  trivy-scan:
+    runs-on: ubuntu-latest
     needs: [setup, build-platform-components]
-    uses: IQGeo/devops-engineering-ci-redeploy-eks-pod/.github/workflows/redeploy-eks-pod.yml@main
-    with:
-      pod_name: ${{ inputs.pod_name }}
-      namespace: ${{ inputs.namespace }}
-    secrets: inherit
+    steps:
+      - name: Run Trivy scan of image
+        uses: IQGeo/devops-engineering-ci-public-trivy-scan-action@devops/ET-410-trivy-scan
+        with:
+          image: iqgeoproddev.azurecr.io/engineering/platform-${{ fromJson(needs.setup.outputs.modules_array)[0] }}-appserver:${{ inputs.version }}
+          registry_username: ${{ secrets.REGISTRY_USERNAME }}
+          registry_password: ${{ secrets.REGISTRY_PASSWORD }}
+          severity_threshold: "MEDIUM,CRITICAL,HIGH"
+          format: "table"
+          output: "trivy-report.txt"
+          token: ${{ secrets.GITHUB_TOKEN }}
