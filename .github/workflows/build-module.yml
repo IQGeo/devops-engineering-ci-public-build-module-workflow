@@ -17,11 +17,6 @@ on:
         required: false
         type: string
         default: '' # An empty string means no modules are included in release repositories
-      include_editions:
-        description: 'Whether to build editions images'
-        required: false
-        type: boolean
-        default: true
       shortened_version:
         description: 'Shortened version for language packs repo'
         required: true
