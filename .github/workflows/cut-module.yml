@@ -110,7 +110,6 @@ jobs:
             pwd
             ls -la
         env:
-          ###### This OUTPUT_DIR value is different on all modules cut scripts, it needs to be standardised
             OUTPUT_DIR: "${{ github.workspace }}/${{ env.OUTPUT_DIR }}"
       
       - name: Azure Login
