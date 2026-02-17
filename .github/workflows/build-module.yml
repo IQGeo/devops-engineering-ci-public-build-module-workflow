@@ -236,5 +236,4 @@ jobs:
           registry_password: ${{ secrets.REGISTRY_PASSWORD }}
           severity_threshold: "MEDIUM,CRITICAL,HIGH"
           format: "table"
-          output: "trivy-report.txt"
           token: ${{ secrets.GITHUB_TOKEN }}
