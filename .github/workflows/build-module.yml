@@ -231,7 +231,7 @@ jobs:
       - name: Run Trivy scan of image
         uses: IQGeo/devops-engineering-ci-public-trivy-scan-action@devops/ET-410-trivy-scan
         with:
-          image: iqgeoproddev.azurecr.io/engineering/platform-${{ needs.setup.outputs.hyphenated_module }}-appserver:${{ inputs.version }}
+          image: iqgeoproddev.azurecr.io/devops_sandbox_engineering/platform-${{ needs.setup.outputs.hyphenated_module }}-appserver:${{ inputs.version }}
           registry_username: ${{ secrets.REGISTRY_USERNAME }}
           registry_password: ${{ secrets.REGISTRY_PASSWORD }}
           severity_threshold: "MEDIUM,CRITICAL,HIGH"
