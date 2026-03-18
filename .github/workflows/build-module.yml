@@ -173,6 +173,7 @@ jobs:
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}
       releases_prefix: ${{ inputs.releases_prefix }}
+      download_binaries: false
     secrets: inherit
     
   build-platform-components:
@@ -199,6 +200,7 @@ jobs:
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}
       releases_prefix: ${{ inputs.releases_prefix }}
+      download_binaries: false
     secrets: inherit
     
   build-qa-appserver:
@@ -218,6 +220,7 @@ jobs:
       is_release: ${{ inputs.is_release }}
       engineering_prefix: ${{ inputs.engineering_prefix }}
       releases_prefix: ${{ inputs.releases_prefix }}
+      download_binaries: false
     secrets: inherit
 
   redeploy-eks-pod:
