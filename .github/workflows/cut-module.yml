@@ -45,6 +45,14 @@ jobs:
             path: myworld-product-core    
             token: ${{ secrets.GH_TOKEN }}
 
+      - name: Checkout mywapp-common repo if building survey
+        if: ${{ inputs.module == 'survey' }}
+        uses: actions/checkout@v4
+        with:
+            repository: IQGeo/myworld-product-mywapp-common
+            path: myworld-product-mywapp-common
+            token: ${{ secrets.GH_TOKEN }}
+
       - name: Checkout Comms repo if building comms_cloud
         if: ${{ inputs.module == 'comms_cloud' }}
         uses: actions/checkout@v4
