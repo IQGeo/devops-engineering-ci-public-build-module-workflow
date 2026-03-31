@@ -79,6 +79,11 @@ on:
       REGISTRY_PASSWORD:
         required: true
 
+permissions:
+  contents: read      # Checkout repositories
+  actions: read       # Call reusable workflows, download/upload artifacts
+  packages: write     # Push to container registries
+
 env:
   # Registry Configuration
   ACR_REGISTRY: "iqgeoproddev.azurecr.io"

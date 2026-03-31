@@ -25,6 +25,10 @@ on:
         AZURE_CREDENTIALS:
             required: true
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   cut_engine:
     runs-on: ubuntu-latest
