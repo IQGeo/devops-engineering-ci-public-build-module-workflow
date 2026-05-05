@@ -140,23 +140,34 @@ jobs:
       cut_script_directory: ${{ inputs.cut_script_directory }}
     secrets: inherit
 
-  prepare-dockerfile:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout central Dockerfiles repo
-        uses: actions/checkout@v4
-        with:
-          repository: IQGeo/devops-engineering-ci-buildfiles
-          path: central
-          token: ${{ secrets.GH_TOKEN }}
-      - name: Copy module Dockerfile.injector into expected location
-        run: |
-          mkdir -p .github/workflows
-          cp central/Dockerfile.injector.module .github/workflows/Dockerfile.injector
-      - uses: actions/upload-artifact@v4
-        with:
-          name: injector-dockerfile
-          path: .github/workflows/Dockerfile.injector
+prepare-dockerfile:
+  runs-on: ubuntu-latest
+  steps:
+    - name: Debug GH_TOKEN presence
+      run: |
+        if [ -z "${{ secrets.GH_TOKEN }}" ]; then
+          echo "GH_TOKEN is empty"
+          exit 1
+        else
+          echo "GH_TOKEN is present"
+        fi
+
+    - name: Checkout central Dockerfiles repo
+      uses: actions/checkout@v4
+      with:
+        repository: IQGeo/devops-engineering-ci-buildfiles
+        path: central
+        token: ${{ secrets.GH_TOKEN }}
+
+    - name: Copy module Dockerfile.injector into expected location
+      run: |
+        mkdir -p .github/workflows
+        cp central/Dockerfile.injector.module .github/workflows/Dockerfile.injector
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: injector-dockerfile
+        path: .github/workflows/Dockerfile.injector
     
   build-injectors:
     needs: [setup, cut-artifacts, prepare-dockerfile]
