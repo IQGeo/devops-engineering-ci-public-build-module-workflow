@@ -148,6 +148,7 @@ jobs:
         with:
           repository: IQGeo/devops-engineering-ci-buildfiles
           path: central
+          token: ${{ secrets.GH_TOKEN }}
       - name: Copy module Dockerfile.injector into expected location
         run: |
           mkdir -p .github/workflows
