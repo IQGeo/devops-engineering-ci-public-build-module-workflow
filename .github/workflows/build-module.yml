@@ -94,7 +94,7 @@ env:
   EDITIONS_WORKFLOW: "IQGeo/devops-engineering-ci-public-editions-workflow/.github/workflows/build-editions.yml@main"
   
   # Dockerfile Paths  
-  INJECTOR_DOCKERFILE: "Dockerfile.injector"
+  INJECTOR_DOCKERFILE: ".github/workflows/Dockerfile.injector"
   BUILD_DOCKERFILE: "deployment/dockerfile.build"
   APPSERVER_DOCKERFILE: "deployment/dockerfile.appserver"
   TOOLS_DOCKERFILE: "deployment/dockerfile.tools"
@@ -139,16 +139,33 @@ jobs:
       module: ${{ fromJson(needs.setup.outputs.modules_array)[0] }}
       cut_script_directory: ${{ inputs.cut_script_directory }}
     secrets: inherit
+
+  prepare-dockerfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout central Dockerfiles repo
+        uses: actions/checkout@v4
+        with:
+          repository: IQGeo/devops-engineering-ci-buildfiles
+          path: central
+      - name: Copy module Dockerfile.injector into expected location
+        run: |
+          mkdir -p .github/workflows
+          cp central/Dockerfile.injector.module .github/workflows/Dockerfile.injector
+      - uses: actions/upload-artifact@v4
+        with:
+          name: injector-dockerfile
+          path: .github/workflows/Dockerfile.injector
     
   build-injectors:
-    needs: [setup, cut-artifacts]
+    needs: [setup, cut-artifacts, prepare-dockerfile]
     strategy:
       matrix:
         module: ${{ fromJson(needs.setup.outputs.modules_array) }}
     uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
     with:
       version: ${{ inputs.version }}
-      dockerfile_path: "Dockerfile.injector"
+      dockerfile_path: ".github/workflows/Dockerfile.injector"
       docker_context: "."
       module: ${{ matrix.module }}
       release_modules: ${{ inputs.release_modules }}
