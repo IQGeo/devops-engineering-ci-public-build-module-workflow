@@ -78,6 +78,8 @@ on:
         required: true
       REGISTRY_PASSWORD:
         required: true
+      ANTHONY_TOKEN_TEST:
+        required: false
 
 permissions:
   id-token: write
