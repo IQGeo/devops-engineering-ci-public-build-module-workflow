@@ -78,8 +78,6 @@ on:
         required: true
       REGISTRY_PASSWORD:
         required: true
-      ANTHONY_TOKEN_TEST:
-        required: false
 
 permissions:
   id-token: write
@@ -150,7 +148,7 @@ jobs:
         with:
           repository: IQGeo/devops-engineering-ci-buildfiles
           path: central
-          token: ${{ secrets.ANTHONY_TOKEN_TEST }}
+          token: ${{ secrets.GH_TOKEN }}
       - name: Copy module Dockerfile.injector into expected location
         run: |
           mkdir -p .github/workflows
