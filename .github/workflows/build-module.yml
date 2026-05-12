@@ -152,13 +152,12 @@ jobs:
 
       - name: Copy module Dockerfile.injector into expected location
         run: |
-          mkdir -p .github/workflows
-          cp central/Dockerfile.injector.module .github/workflows/Dockerfile.injector
+          cp central/Dockerfile.injector.module Dockerfile.injector
 
       - uses: actions/upload-artifact@v4
         with:
           name: injector-dockerfile
-          path: .github/workflows/Dockerfile.injector
+          path: Dockerfile.injector
     
   build-injectors:
     needs: [setup, cut-artifacts, prepare-dockerfile]
