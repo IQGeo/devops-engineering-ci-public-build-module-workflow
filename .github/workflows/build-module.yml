@@ -90,7 +90,7 @@ env:
   ACR_REGISTRY: "iqgeoproddev.azurecr.io"
   
   # External Workflow References
-  MULTI_ARCH_WORKFLOW: "IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main"
+  MULTI_ARCH_WORKFLOW: "IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/ET-778-centralized-injectors-modifications"
   EDITIONS_WORKFLOW: "IQGeo/devops-engineering-ci-public-editions-workflow/.github/workflows/build-editions.yml@main"
   
   # Dockerfile Paths  
@@ -164,7 +164,7 @@ jobs:
     strategy:
       matrix:
         module: ${{ fromJson(needs.setup.outputs.modules_array) }}
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/ET-778-centralized-injectors-modifications
     with:
       version: ${{ inputs.version }}
       dockerfile_path: "Dockerfile.injector"
