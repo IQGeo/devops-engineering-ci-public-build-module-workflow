@@ -139,9 +139,28 @@ jobs:
       module: ${{ fromJson(needs.setup.outputs.modules_array)[0] }}
       cut_script_directory: ${{ inputs.cut_script_directory }}
     secrets: inherit
+
+  prepare-dockerfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout central Dockerfiles repo
+        uses: actions/checkout@v4
+        with:
+          repository: IQGeo/devops-engineering-ci-buildfiles
+          path: central
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Copy module Dockerfile.injector into expected location
+        run: |
+          cp central/injectors/module/Dockerfile.injector Dockerfile.injector
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: injector-dockerfile
+          path: Dockerfile.injector
     
   build-injectors:
-    needs: [setup, cut-artifacts]
+    needs: [setup, cut-artifacts, prepare-dockerfile]
     strategy:
       matrix:
         module: ${{ fromJson(needs.setup.outputs.modules_array) }}
