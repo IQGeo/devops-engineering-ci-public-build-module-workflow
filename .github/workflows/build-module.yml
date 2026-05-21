@@ -152,7 +152,7 @@ jobs:
 
       - name: Copy module Dockerfile.injector into expected location
         run: |
-          cp central/injectors/module/Dockerfile.injector Dockerfile.injector
+          cp central/injectors/modules/Dockerfile.injector Dockerfile.injector
 
       - uses: actions/upload-artifact@v4
         with:
