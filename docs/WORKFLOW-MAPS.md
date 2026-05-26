@@ -6,7 +6,8 @@ This document is the visual index for the reusable workflow documentation.
 
 Use [README.md](./README.md) for the narrative system overview.
 Use [REPOSITORY-MAP.md](./REPOSITORY-MAP.md) for the cross-repository dependency map.
-Use [BUILD-PATHS.md](./BUILD-PATHS.md) for the build-path diagrams.
+Use the process-specific visual docs for focused workflow diagrams.
+Use [BUILD-PATHS.md](./BUILD-PATHS.md) for the shared build-component diagrams.
 
 ## Visual-first note
 
@@ -17,5 +18,8 @@ If you read them as raw markdown only, the diagrams will look like source code i
 ## Diagram entry points
 
 - [REPOSITORY-MAP.md](./REPOSITORY-MAP.md): top-level architecture, repository map, and system relationships.
-- [BUILD-PATHS.md](./BUILD-PATHS.md): platform, module, independent-module, shared multi-arch, and output-flow diagrams.
+- [BUILD-PLATFORM-WORKFLOW.md](./BUILD-PLATFORM-WORKFLOW.md): visual overview and top-level architecture for the platform process workflow.
+- [BUILD-MODULE-WORKFLOW.md](./BUILD-MODULE-WORKFLOW.md): visual overview and top-level architecture for the standard module process workflow.
+- [BUILD-INDEPENDENT-MODULE-WORKFLOW.md](./BUILD-INDEPENDENT-MODULE-WORKFLOW.md): visual overview and top-level architecture for the independent-module process workflow.
+- [BUILD-PATHS.md](./BUILD-PATHS.md): shared multi-arch, specialised platform, and output-flow diagrams.
 - [WHO-CALLS-WHAT.md](./WHO-CALLS-WHAT.md): direct inbound and outbound dependency matrix for this repository.
