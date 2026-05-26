@@ -13,7 +13,7 @@ The build system is organized into layers:
 5. Optional deployment and scanning components sit adjacent to the core build graph.
 
 For visual views of the same relationships, use [WORKFLOW-MAPS.md](./WORKFLOW-MAPS.md).
-For the short outline view, use [AGENTS.md](./AGENTS.md).
+For the short outline view, use [ENG-DEVOPS-WORKFLOWS.md](./ENG-DEVOPS-WORKFLOWS.md).
 
 ## Summary
 
