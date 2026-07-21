@@ -164,7 +164,7 @@ jobs:
     strategy:
       matrix:
         module: ${{ fromJson(needs.setup.outputs.modules_array) }}
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/et-979-add-sbom-attestation
     with:
       version: ${{ inputs.version }}
       dockerfile_path: "Dockerfile.injector"
@@ -184,7 +184,7 @@ jobs:
   build-platform-build:
     if: ${{ inputs.build_qa_images == true }}
     needs: [setup, build-injectors]
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/et-979-add-sbom-attestation
     with:
       version: ${{ inputs.version }}
       module: platform-${{ needs.setup.outputs.hyphenated_module }}-build
@@ -211,7 +211,7 @@ jobs:
             dockerfile_path: deployment/dockerfile.appserver
           - module: platform-${{ needs.setup.outputs.hyphenated_module }}-tools  
             dockerfile_path: deployment/dockerfile.tools
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/et-979-add-sbom-attestation
     with:
       version: ${{ inputs.version }}
       module: ${{ matrix.module }}
@@ -231,7 +231,7 @@ jobs:
   build-qa-appserver:
     if: ${{ inputs.build_qa_images == true }}
     needs: [setup, build-platform-components]
-    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@main
+    uses: IQGeo/devops-engineering-ci-public-build-multi-arch-workflow/.github/workflows/build-multi-arch.yml@devops/et-979-add-sbom-attestation
     with:
       version: ${{ inputs.version }}
       module: platform-${{ needs.setup.outputs.hyphenated_module }}-qa-appserver
