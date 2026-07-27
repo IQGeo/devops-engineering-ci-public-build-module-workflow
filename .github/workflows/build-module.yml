@@ -84,7 +84,6 @@ permissions:
   contents: read      # Checkout repositories
   actions: read       # Call reusable workflows, download/upload artifacts
   packages: write     # Push to container registries
-  attestations: write # Pass through to build-multi-arch for provenance attestation
 
 env:
   # Registry Configuration
