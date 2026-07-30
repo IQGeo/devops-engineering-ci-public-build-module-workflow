@@ -147,6 +147,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: IQGeo/devops-engineering-ci-buildfiles
+          ref: devops/et-979-test-sbom-attestation
           path: central
           token: ${{ secrets.GH_TOKEN }}
 
